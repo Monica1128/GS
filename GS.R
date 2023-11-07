@@ -1,0 +1,396 @@
+setwd("   ")
+gen<-as.matrix(read.csv(file="gen.csv",header=F))
+kin<-as.matrix(read.csv(file ="K.csv", header=F)) 
+phe<-as.matrix(read.csv(file="phe.csv",header=T))
+nfold<-10
+foldidID<-lapply(1:10,function(i){ 
+n<-nrow(phe)
+sample(rep(1:nfold,ceiling(n/nfold))[1:n])
+}) 
+write.csv(x=foldidID,file="foldidID.csv",row.names=F)
+foldidID<-as.matrix(read.csv(file="foldidID.csv",header=F))#固定！
+x<-as.matrix(t(gen))
+x<-apply(x,2,as.numeric)
+phe<-apply(phe[,-1],2,as.numeric)
+y<-as.matrix(phe[,1]) #多个性状记得修改！！！！1,SCI;2,MAT
+
+#1------------------------------------BA-------------------------------------------  
+BA_yp<-NULL
+BA_yt<-NULL
+R2_BA<-NULL
+for (i in 1:5){
+  cat(i) 
+  foldid<-foldidID[,i]
+  gen<-x
+  yp_BA<-NULL
+  yt_BA<-NULL
+  for(k in 1:nfold){
+    id2<-which(foldid==k) 
+    test<-y[id2]
+    phe_NA<-y  
+    phe_NA[id2,1]<-NA 
+    BA<-BGLR(y=as.matrix(phe_NA), 
+             ETA=list(list(X=gen,model='BayesA')),nIter=1000,burnIn=500)
+    BA_pred<-BA$yHat
+    yhat<-BA_pred[id2]
+    yp_BA<-c(yp_BA,yhat)
+    yt_BA<-c(yt_BA,test)
+  }
+  r2<-cor(yp_BA,yt_BA)^2
+  R2_BA<-c(R2_BA,r2)
+  BA_yp<-cbind(BA_yp,yp_BA)
+  BA_yt<-cbind(BA_yt,yt_BA)
+}
+R2_BA<-as.matrix(R2_BA)
+BA_R2<-colMeans(R2_BA)
+write.csv(x=R2_BA,file="./SCI/SCI_BA_R2.csv",row.names=T)
+write.csv(x=BA_R2,file="./SCI/SCI_BA_mean_R2.csv",row.names=T)
+write.csv(x=BA_yp,file="./SCI/SCI_BA_yp.csv",row.names=T)
+write.csv(x=BA_yt,file="./SCI/SCI_BA_yt.csv",row.names=T)
+#2---------------------------BB----------------------------------------------------- 
+BB_yp<-NULL
+BB_yt<-NULL
+R2_BB<-NULL
+for (i in 1:5){
+  cat(i) 
+  foldid<-foldidID[,i] 
+  gen<-x
+  yp_BB<-NULL
+  yt_BB<-NULL
+  for(k in 1:nfold){
+    id2<-which(foldid==k) 
+    test<-y[id2]
+    phe_NA<-y  
+    phe_NA[id2,1]<-NA 
+    BB<-BGLR(y=as.matrix(phe_NA), 
+             ETA=list(list(X=gen,model='BayesB')),nIter=1000,burnIn=500)
+    BB_pred<-BB$yHat
+    yhat<-BB_pred[id2]
+    yp_BB<-c(yp_BB,yhat)
+    yt_BB<-c(yt_BB,test)
+  }
+  r2<-cor(yp_BB,yt_BB)^2
+  R2_BB<-c(R2_BB,r2)
+  BB_yp<-cbind(BB_yp,yp_BB)
+  BB_yt<-cbind(BB_yt,yt_BB)
+}
+R2_BB<-as.matrix(R2_BB)
+BB_R2<-colMeans(R2_BB)
+write.csv(x=R2_BB,file="./SCI/SCI_BB_R2.csv",row.names=T)
+write.csv(x=BB_R2,file="./SCI/SCI_BB_mean_R2.csv",row.names=T)
+write.csv(x=BB_yp,file="./SCI/SCI_BB_yp.csv",row.names=T)
+write.csv(x=BB_yt,file="./SCI/SCI_BB_yt.csv",row.names=T)
+#3---------------------------------BC------------------------------------------------  
+BC_yp<-NULL
+BC_yt<-NULL
+R2_BC<-NULL
+for (i in 1:5){
+  cat(i) 
+  foldid<-foldidID[,i] 
+  gen<-x
+  yp_BC<-NULL
+  yt_BC<-NULL
+  for(k in 1:nfold){
+    id2<-which(foldid==k) 
+    test<-y[id2]
+    phe_NA<-y  
+    phe_NA[id2,1]<-NA 
+    BC<-BGLR(y=as.matrix(phe_NA), 
+             ETA=list(list(X=gen,model='BayesC')),nIter=1000,burnIn=500)
+    BC_pred<-BC$yHat
+    yhat<-BC_pred[id2]
+    yp_BC<-c(yp_BC,yhat)
+    yt_BC<-c(yt_BC,test)
+  }
+  r2<-cor(yp_BC,yt_BC)^2
+  R2_BC<-c(R2_BC,r2)
+  BC_yp<-cbind(BC_yp,yp_BC)
+  BC_yt<-cbind(BC_yt,yt_BC)
+}
+R2_BC<-as.matrix(R2_BC)
+BC_R2<-colMeans(R2_BC)
+write.csv(x=R2_BC,file="./SCI/SCI_BC_R2.csv",row.names=T)
+write.csv(x=BC_R2,file="./SCI/SCI_BC_mean_R2.csv",row.names=T)
+write.csv(x=BC_yp,file="./SCI/SCI_BC_yp.csv",row.names=T)
+write.csv(x=BC_yt,file="./SCI/SCI_BC_yt.csv",row.names=T)
+#4---------------------------------BRR---------------------------------------------  
+BRR_yp<-NULL
+BRR_yt<-NULL
+R2_BRR<-NULL
+k<-10
+for (i in 1:5){
+  cat(i) 
+  foldid<-foldidID[,i] 
+  gen<-x
+  yp_BRR<-NULL
+  yt_BRR<-NULL
+  for(k in 1:nfold){
+    id2<-which(foldid==k) 
+    test<-y[id2]
+    phe_NA<-y  
+    phe_NA[id2,1]<-NA 
+    BRR<-BGLR(y=as.matrix(phe_NA), 
+              ETA=list(list(X=gen,model='BRR')),nIter=1000,burnIn=500)
+    BRR_pred<-BRR$yHat
+    yhat<-BRR_pred[id2]
+    yp_BRR<-c(yp_BRR,yhat)
+    yt_BRR<-c(yt_BRR,test)
+  }
+  r2<-cor(yp_BRR,yt_BRR)^2
+  R2_BRR<-c(R2_BRR,r2)
+  BRR_yp<-cbind(BRR_yp,yp_BRR)
+  BRR_yt<-cbind(BRR_yt,yt_BRR)
+}
+R2_BRR<-as.matrix(R2_BRR)
+BRR_R2<-colMeans(R2_BRR)
+write.csv(x=R2_BRR,file="./SCI/SCI_BRR_R2.csv",row.names=T)
+write.csv(x=BRR_R2,file="./SCI/SCI_BRR_mean_R2.csv",row.names=T)
+write.csv(x=BRR_yp,file="./SCI/SCI_BRR_yp.csv",row.names=T)
+write.csv(x=BRR_yt,file="./SCI/SCI_BRR_yt.csv",row.names=T)
+#5---------------------LAASO，弹性网方法-----------------------------
+LASSO_yp<-NULL
+LASSO_yt<-NULL
+R2_LASSO<-NULL
+for (i in 1:5){
+  cat(i)
+  foldid<-foldidID[,i]
+  pearson<-function(x,y,id){
+    yp_LASSO<-NULL
+    yt_LASSO<-NULL
+    iid<-id
+    for(k in 1:max(iid)){
+      iindex<-which(iid==k) 
+      xx<-x[-iindex,] 
+      yy<-y[-iindex]
+      ffit<-glmnet(x=xx,y=yy,lambda=lambda)
+      tmp<-predict(ffit,newx=x[iindex,])
+      yp_LASSO<-rbind(yp_LASSO,tmp)
+      yt_LASSO<-rbind(yt_LASSO,as.matrix(y[iindex]))
+    }
+    R2_LASSO<-cor(yp_LASSO,yt_LASSO)^2
+    LASSO<-data.frame(R2_LASSO)
+    pred<-data.frame(yp_LASSO,yt_LASSO)
+    names(LASSO)<-c("LASSO")
+    names(pred)<-c("yp_LASSO","yt_LASSO")
+    return(list(LASSO,pred))
+  }
+  fit<-cv.glmnet(x=x,y=y,foldid=foldid)
+  theta<-coef(fit,s="lambda.min")
+  beta<-theta[1]
+  gamma<-theta[-1]
+  yhat<-predict(fit,newx=x,s="lambda.min")
+  lambda<-fit$lambda.min
+  index<-match(lambda,fit$lambda)
+  mse.cv<-fit$cvm[index]
+  nonzero<-fit$nzero[index]
+  sigma2<-sum((y-yhat)^2)/nrow(y)
+  vp<-sum((y-mean(y))^2)/nrow(y)
+  #goodness<-drop(cor(y,yhat)^2)
+  pred_mse<-1-mse.cv/vp
+  pred_r2<-pearson(x,y,foldid)
+  lassor2<- pred_r2[[1]]
+  R2_LASSO<-c(R2_LASSO,lassor2)
+  LASSO_yp<-cbind(LASSO_yp,pred_r2[[2]]$yp_LASSO)
+  LASSO_yt<-cbind(LASSO_yt,pred_r2[[2]]$yt_LASSO)
+}
+R2_LASSO<-as.matrix(as.numeric(R2_LASSO))
+LASSO_R2<-colMeans(R2_LASSO)
+write.csv(x=R2_LASSO,file="./SCI/SCI_LASSO_R2.csv",row.names=T)
+write.csv(x=LASSO_R2,file="./SCI/SCI_LASSO_mean_R2.csv",row.names=T)
+write.csv(x=LASSO_yt,file="./SCI/SCI_LASSO_yt.csv",row.names=T)
+write.csv(x=LASSO_yp,file="./SCI/SCI_LASSO_yp.csv",row.names=T)
+#6---------------------------RKHS-------------------------------------------
+RKHS_yp<-NULL
+RKHS_yt<-NULL
+R2_RKHS<-NULL
+for (i in 1:5){
+  cat(i)
+  foldid<-foldidID[,i]
+  gen<-x
+  yp_RKHS<-NULL
+  yt_RKHS<-NULL
+  for(k in 1:nfold){
+    id2<-which(foldid==k) 
+    test<-y[id2]
+    phe_NA<-y  
+    phe_NA[id2,1]<-NA 
+    X<-scale(x=gen,center=TRUE,scale=TRUE)
+    G<-tcrossprod(X)/ncol(X)
+    RKHS<-BGLR(y=as.matrix(phe_NA),ETA=list(list(K=G, model="RKHS")),  
+               nIter=1000,burnIn=500,thin=5)
+    RKHS_pred<-RKHS$yHat
+    yhat<-RKHS_pred[id2]
+    yp_RKHS<-c(yp_RKHS,yhat)
+    yt_RKHS<-c(yt_RKHS,test)
+  }
+  r2<-cor(yp_RKHS,yt_RKHS)^2
+  R2_RKHS<-c(R2_RKHS,r2)
+  RKHS_yp<-cbind(RKHS_yp,yp_RKHS)
+  RKHS_yt<-cbind(RKHS_yt,yt_RKHS)
+}
+R2_RKHS<-as.matrix(R2_RKHS)
+RKHS_R2<-colMeans(R2_RKHS)
+write.csv(x=R2_RKHS,file="./SCI/SCI_RKHS_R2.csv",row.names=T) 
+write.csv(x=RKHS_R2,file="./SCI/SCI_RKHS_mean_R2.csv",row.names=T) 
+write.csv(x=RKHS_yp,file="./SCI/SCI_RKHS_yp.csv",row.names=T) 
+write.csv(x=RKHS_yt,file="./SCI/SCI_RKHS_yt.csv",row.names=T) 
+#7-----------------------SVM-RBF---------------------
+svmRBF_yp<-NULL
+svmRBF_yt<-NULL
+R2_svmRBF<-NULL
+for (i in 1:5){
+  cat(i) 
+  foldid<-foldidID[,i]  
+  yp_svm_BRF<-NULL
+  yt_svm_BRF<-NULL
+  for(k in 1:nfold){
+    id1<-which(foldid!=k)
+    id2<-which(foldid==k)
+    x1<-x[id1,]
+    x2<-x[id2,]
+    y1<-y[id1]
+    y2<-y[id2]
+    kern<-ksvm(x=x1,y=y1,type='eps-svr',kernel="rbfdot",kpar="automatic",cross=0)
+    yhat<-predict(kern,x2,type='decision')
+    yp_svm_BRF<-c(yp_svm_BRF,yhat)
+    yt_svm_BRF<-c(yt_svm_BRF,y2)
+  }
+  r2<-cor(yp_svm_BRF,yt_svm_BRF)^2
+  R2_svmRBF<-c(R2_svmRBF,r2)
+  svmRBF_yp<-cbind(svmRBF_yp,yp_svm_BRF)
+  svmRBF_yt<-cbind(svmRBF_yt,yt_svm_BRF)
+}
+R2_svmRBF<-as.matrix(R2_svmRBF)
+svmRBF_R2<-colMeans(R2_svmRBF)
+write.csv(x=R2_svmRBF,file="./SCI/SCI_SVM_RBF_R2.csv",row.names=T)
+write.csv(x=svmRBF_R2,file="./SCI/SCI_SVM_RBF_mean_R2.csv",row.names=T)
+write.csv(x=svmRBF_yp,file="./SCI/SCI_SVM_RBF_yp.csv",row.names=T)
+write.csv(x=svmRBF_yt,file="./SCI/SCI_SVM_RBF_yt.csv",row.names=T)
+#8-------------------GBLUP(最佳线性无偏预测)---------------------------------------  
+kk<-kin
+id<-NULL
+fold<-NULL
+GBLUP_r2<-NULL
+GBLUP_yp<-NULL
+GBLUP_yt<-NULL
+for (i in 1:5){
+  cat(i)
+  foldid<-foldidID[,i]
+  load(file="mixed.RData")
+  n<-length(y)
+  x.<-matrix(1,n,1)
+  par<-mixed(x=x.,y=y,kk=kk,method="REML",eigen=T)
+  cv.mixed<-function(x.,y,kk,nfold=nfold,foldid=NULL){
+    n<-length(y)
+    yp_Gblup<-NULL
+    yt_Gblup<-NULL
+    for(k in 1:nfold){
+      i1<-which(foldid!=k)
+      i2<-which(foldid==k)
+      x1<-x.[i1,,drop=F]
+      y1<-y[i1,,drop=F]
+      k11<-kk[i1,i1]
+      parm<-mixed(x=x1,y=y1,kk=k11,method="REML",eigen=TRUE)
+      qq<-parm[[2]]
+      delta<-qq[[1]]
+      u<-qq[[2]]
+      beta<-as.matrix(parm[[1]]$beta,ncol(x),1)
+      va<-parm[[1]]$va[1]
+      ve<-parm[[1]]$ve[1]
+      x2<-x.[i2,,drop=F]
+      y2<-y[i2,,drop=F]
+      k41<-kk[i2,i1]
+      h<-1/(delta*va+ve)
+      y3<-x2%*%beta+va*k41%*%u%*%diag(h)%*%t(u)%*%(y1-x1%*%beta)
+      #y3<-x2%*%beta+va*k41%*%solve(k11*va+diag(length(y1))*ve)%*%(y1-x1%*%beta)
+      fold<-c(fold,rep(k,length(y2)))
+      yt_Gblup<-c(yt_Gblup,y2)
+      yp_Gblup<-c(yp_Gblup,y3)
+      id<-c(id,i2)
+    }
+    pred<-data.frame(fold,id,yt_Gblup,yp_Gblup)
+    R2<-cor(pred$yt_Gblup,pred$yp_Gblup)^2
+    return(list(data.frame(r2=R2),pred))
+  }
+  Gblup<-cv.mixed(x=x.,y=y,kk=kk,nfold=nfold,foldid=foldid)
+  Gblup_r2<-as.numeric(Gblup[[1]])
+  GBLUP_r2<-c(GBLUP_r2,Gblup_r2)
+  gblup<-Gblup[[2]]
+  yp_Gblup<-as.numeric(gblup[,4])
+  yt_Gblup<-as.numeric(gblup[,3])
+  GBLUP_yp<-cbind(GBLUP_yp,yp_Gblup)
+  GBLUP_yt<-cbind(GBLUP_yt,yt_Gblup)
+}
+R2_Gblup<-as.matrix(GBLUP_r2)
+GBLUP_R2<-colMeans(R2_Gblup)
+write.csv(x=R2_Gblup,file="./SCI/SCI_GBLUP_R2.csv",row.names=T)
+write.csv(x=GBLUP_R2,file="./SCI/SCI_GBLUP_mean_R2.csv",row.names=T)
+write.csv(x=GBLUP_yt,file="./SCI/SCI_GBLUP_yt.csv",row.names=T)
+write.csv(x=GBLUP_yp,file="./SCI/SCI_GBLUP_yp.csv",row.names=T)
+#9----------------PLS(偏最小二乘法）--------------------------------------- 
+pls_yp<-NULL
+pls_yt<-NULL
+R2_pls<-NULL
+for (i in 1:5){ 
+  cat(i) 
+  foldid<-foldidID[,i]  
+  yt_pls<-NULL
+  yp_pls<-NULL
+  for(k in 1:nfold){
+    id1<-which(foldid!=k) 
+    id2<-which(foldid==k) 
+    x1<-x[id1,] 
+    x2<-x[id2,] 
+    y1<-y[id1]  
+    y2<-y[id2]  
+    pls.fit<-plsr(y1~x1,ncomp=5,validation="CV")  
+    nn<-as.numeric( which.min(tt <-RMSEP(pls.fit)$val[1,,][-1]))
+    yhat<-as.matrix(predict(pls.fit, newdata=x2,ncomp=nn))
+    yp_pls<-c(yp_pls,yhat)
+    yt_pls<-c(yt_pls,y2)
+  }
+  r2<-cor(yp_pls,yt_pls)^2
+  R2_pls<-c(R2_pls,r2)
+  pls_yp<-cbind(pls_yp,yp_pls)
+  pls_yt<-cbind(pls_yt,yt_pls)
+}
+R2_pls<-as.matrix(R2_pls)
+PLS_R2<-colMeans(R2_pls)
+write.csv(x=R2_pls,file="./SCI/SCI_PLS_R2.csv",row.names=T)
+write.csv(x=PLS_R2,file="./SCI/SCI_PLS_mean_R2.csv",row.names=T)
+write.csv(x=pls_yp,file="./SCI/SCI_PLS_yp.csv",row.names=T)
+write.csv(x=pls_yt,file="./SCI/SCI_PLS_yt.csv",row.names=T)
+#10--------------------RRBLUP(岭回归最佳线性无偏预测)----------------------------
+rrblup_yp<-NULL
+rrblup_yt<-NULL
+R2_rrblup<-NULL
+for (i in 1:5){
+  foldid<-foldidID[,i] ####[[i]] 
+  yp_rrblup<-NULL
+  yt_rrblup<-NULL
+  for(k in 1:nfold){
+    id1<-which(foldid!=k)
+    id2<-which(foldid==k)
+    x1<-x[id1,]
+    x2<-x[id2,]
+    y1<-y[id1]
+    y2<-y[id2]
+    rrblup<-mixed.solve(y1, Z=x1, K=NULL, SE = FALSE, return.Hinv=FALSE)
+    ef<-rrblup$u
+    e<-as.matrix(ef)
+    pred_test_valid<-x2%*%e
+    yp_test<-pred_test_valid[,1]+rrblup$beta
+    yp_rrblup<-c(yp_rrblup,yp_test)
+    yt_rrblup<-c(yt_rrblup,y2)
+  }
+  r2<-cor(yp_rrblup,yt_rrblup)^2
+  R2_rrblup<-c(R2_rrblup,r2)
+  rrblup_yp<-cbind(rrblup_yp,yp_rrblup)
+  rrblup_yt<-cbind(rrblup_yt,yt_rrblup)
+}
+R2_rrblup<-as.matrix(R2_rrblup)
+rrblup_R2<-colMeans(R2_rrblup)
+write.csv(x=R2_rrblup,file="./SCI/SCI_RRBLUP_R2.csv",row.names=T)
+write.csv(x=rrblup_R2,file="./SCI/SCI_RRBLUP_mean_R2.csv",row.names=T)
+write.csv(x=rrblup_yp,file="./SCI/SCI_RRBLUP_yp.csv",row.names=T)
+write.csv(x=rrblup_yt,file="./SCI/SCI_RRBLUP_yt.csv",row.names=T)
